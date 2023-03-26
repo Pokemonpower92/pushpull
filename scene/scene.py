@@ -4,6 +4,8 @@ from logger.pushpulllogger import PushPullLogger
 from pushpullconfig import colors
 import pygame
 
+from pushpullconfig.gameconfig import FPS
+
 
 class Scene:
     """Scenes are the invokers for a particular scene to be displayed."""
@@ -13,6 +15,8 @@ class Scene:
         self._all_sprites = pygame.sprite.Group()
         self._running = False
         self._logger = PushPullLogger("scene")
+
+        self._clock = pygame.time.Clock()
 
     def _update(self) -> None:
         """
@@ -54,6 +58,7 @@ class Scene:
         try:
             self._running = True
             while self._running:
+                self._clock.tick(FPS)
                 EventHandler.check_for_exit_event()
                 self._update()
                 self._draw_sprites()

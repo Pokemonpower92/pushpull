@@ -1,9 +1,10 @@
+import sys
 from typing import Dict, Any
 
 import pygame
 
 from logger.pushpulllogger import PushPullLogger
-from physics.player_physics import PhysicsEngine
+from physics.physicsengine import PhysicsEngine
 from pushpullconfig import colors
 from pushpullconfig import playerconfig
 from pushpulltypes.playeraction import PlayerAction
@@ -14,15 +15,19 @@ class PlayerSprite(pygame.sprite.Sprite):
     Player sprite is teh sprite for the player. Duh
     """
 
-    def __init__(self):
+    def __init__(self, obstructions: pygame.sprite.Group):
         pygame.sprite.Sprite.__init__(self)
-        self._action = PlayerAction.IDLE
-        self._direction = pygame.math.Vector2(0, 0)
-        self._velocity = pygame.math.Vector2(0, 0)
-        self._weight = 100
+        self._obstructions = obstructions
+
+        self._actions = [PlayerAction.IDLE]
+
+        # Physics fields.
+        self.direction = pygame.math.Vector2(0, 0)
+        self.velocity = pygame.math.Vector2(0, 0)
+        self.weight = 100
 
         self._dimensions = (20, 40)
-        self._position = (20, 660)
+        self._position = (100, 710)
         self._hit_box = None
 
         self.rect = None
@@ -48,65 +53,121 @@ class PlayerSprite(pygame.sprite.Sprite):
         except Exception as e:
             self._logger.error(f"Exception loading assets for player sprite. ERROR: {e}", 2)
 
-    def _move(self, distance: pygame.math.Vector2) -> None:
+    def _falling(self, rect) -> None:
         """
-        Move the player the specified distance.
-        :param distance: A vector describing the distance to move.
+        Set the player to falling.
         :return: None
         """
-        self.rect.x += distance.x
-        self.rect.y += distance.y
-        self._hit_box.x += distance.x
-        self._hit_box.y += distance.y
+        self.rect.top = rect.bottom
+        self._hit_box.top = rect.bottom
+        self.velocity.y = 0
+        self.direction.y = -1
+
+    def _landing(self, rect) -> None:
+        """
+        Set the player to grounded state.
+        :return: None
+        """
+        self.velocity.y = 0
+        self.rect.bottom = rect.top
+        self._hit_box.bottom = rect.top
+
+    def _check_vertical_collisions(self) -> None:
+        """
+        Check for any collisions on the y_axis.
+        :return: None
+        """
+
+        self.rect.y += self.velocity.y
+        for obj in self._obstructions:
+            if obj.rect.colliderect(self.rect):
+                # Check whether the player was rising or falling.
+                if self.velocity.y < 0:
+                    self._falling(obj.rect)
+                else:
+                    self._landing(obj.rect)
+
+    def _check_horizontal_collisions(self) -> None:
+        """
+        Check for any collisions on the x_axis.
+        :return: None
+        """
+
+        self.rect.x += self.velocity.x
+        for obj in self._obstructions:
+            if obj.rect.colliderect(self.rect):
+                # Check whether the player was rising or falling.
+                if self.velocity.x < 0:
+                    self.rect.left = obj.rect.right
+                    self._hit_box.left = obj.rect.right
+                else:
+                    self.rect.right = obj.rect.left
+                    self._hit_box.right = obj.rect.left
+
+                self.velocity.x = 0
+
+    def _move(self) -> None:
+        """
+        Move the player the specified distance.
+        :return: None
+        """
+
+        try:
+
+            self._check_vertical_collisions()
+            self._check_horizontal_collisions()
+
+        except Exception as e:
+            self._logger.error(f"Error moving player. {e}", 2)
 
     def _get_input(self) -> None:
         """
-        Get input from the player and pick an action.
+        Get input from the player and add it to the actions queue.
         :return: None
         """
         pressed_keys = pygame.key.get_pressed()
 
-        # If the player doesn't press a key we want the
-        # sprite to be idle.
-        self._action = PlayerAction.IDLE
-
         if pressed_keys[pygame.K_SPACE]:
-            self._action = PlayerAction.JUMP
+            self._actions.append(PlayerAction.JUMP)
         if pressed_keys[pygame.K_LSHIFT]:
             self._sprinting = True
 
         if pressed_keys[pygame.K_d]:
-            self._action = PlayerAction.MOVING_RIGHT
+            self._actions.append(PlayerAction.MOVING_RIGHT)
         if pressed_keys[pygame.K_a]:
-            self._action = PlayerAction.MOVING_LEFT
+            self._actions.append(PlayerAction.MOVING_LEFT)
+
+        if len(self._actions) == 0:
+            self._actions.append(PlayerAction.IDLE)
 
         pygame.event.pump()
 
     def _take_action(self) -> None:
         """
-        Take whatever action derived from input is specified.
+        Take whatever actions are on the actions queue.
         :return: None
         """
         try:
-            self._logger.info(f"Player took action: {self._action.name}", 2)
-            added_velocity = pygame.math.Vector2(0, 0)
+            self.delta_velocity = pygame.math.Vector2(0, 0)
 
-            if self._action == PlayerAction.MOVING_LEFT:
-                self._direction = pygame.math.Vector2(-1, 0)
-                added_velocity += playerconfig.WALKING_VELOCITY
-            if self._action == PlayerAction.MOVING_RIGHT:
-                self._direction = pygame.math.Vector2(1, 0)
-                added_velocity += playerconfig.WALKING_VELOCITY
-            if self._action == PlayerAction.JUMP:
-                self._direction = pygame.math.Vector2(0, -1)
-                added_velocity += playerconfig.JUMPING_VELOCITY
-            if self._action == PlayerAction.IDLE:
-                self._direction = pygame.math.Vector2(0, 0)
-                added_velocity += playerconfig.VELOCITY_DECAY
+            while self._actions:
+                action = self._actions.pop(0)
+                if action == PlayerAction.MOVING_LEFT:
+                    self.direction.x = -1
+                    self.delta_velocity += playerconfig.WALKING_VELOCITY
+                if action == PlayerAction.MOVING_RIGHT:
+                    self.direction.x = 1
+                    self.delta_velocity += playerconfig.WALKING_VELOCITY
+                if action == PlayerAction.JUMP:
+                    self.direction.y = -1
+                    self.delta_velocity += playerconfig.JUMPING_VELOCITY
+                if action == PlayerAction.IDLE:
+                    self.direction.y = 0
 
-            distance = self._physics_engine.calculate_distance(self._direction, self._velocity, added_velocity)
-            self._move(distance)
-
+                self.velocity = self._physics_engine.calculate_velocity_for_frame(velocity=self.velocity,
+                                                                                  delta_velocity=self.delta_velocity,
+                                                                                  direction=self.direction)
+                self._move()
 
         except Exception as e:
             self._logger.error(f"Exception taking player action. ERROR: {e}", 2)
@@ -131,7 +192,3 @@ class PlayerSprite(pygame.sprite.Sprite):
 
         except Exception as e:
             self._logger.error(f"Exception updating player sprite. ERROR: {e}", 2)
-
-
-
-
