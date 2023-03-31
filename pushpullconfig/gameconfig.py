@@ -1,1 +1,2 @@
 FPS: int = 60
+SPRITE_DIMENSIONS = (32, 32)
