@@ -1,3 +1,3 @@
 from typing import Tuple
 
-WINDOW_DIMS: Tuple = (1400, 800)
+WINDOW_DIMS: Tuple = (1280, 640)
