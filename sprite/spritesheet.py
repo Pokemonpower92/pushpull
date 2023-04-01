@@ -43,12 +43,8 @@ class SpriteSheet:
         if position == 0:
             return 0, 0
 
-        # 0 1 2 3 4
-        # 5 6 7 8 9
-
         images_per_row = self._sheet_dimensions[0] // self._sprite_dimensions[0]
         images_per_col = self._sheet_dimensions[1] // self._sprite_dimensions[1]
-        total_images = images_per_col * images_per_row
         offset_x = (position // images_per_row) * self._sprite_dimensions[0]
         offset_y = (position % images_per_col) * self._sprite_dimensions[1]
 
@@ -65,6 +61,8 @@ class SpriteSheet:
         :return: the image loaded into a pygame.surface object.
         """
         image = pygame.Surface(self._sprite_dimensions)
-        image.blit(self._sheet, (0, 0), self._get_offset_from_position(position))
+        offset = self._get_offset_from_position(position)
+        rect = pygame.Rect(offset[0], offset[1], self._sprite_dimensions[0], self._sprite_dimensions[1])
+        image.blit(self._sheet, (0, 0), rect)
 
         return image
