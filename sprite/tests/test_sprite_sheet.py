@@ -18,4 +18,8 @@ class TestSpriteSheet(unittest.TestCase):
         offset = sheet._get_offset_from_position(0)
         assert offset == (0, 0)
 
+    def test_get_image_at(self):
+        sheet = SpriteSheet(self._file, gameconfig.SPRITE_DIMENSIONS)
 
+        for position in range(24):
+            image = sheet.get_image_at(position)
