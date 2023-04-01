@@ -14,17 +14,10 @@ class EnvironmentSprite(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-    def _load_assets(self, assets: Dict[str, Any]):
-        """
-        Load the assets for the sprite.
-        :param assets: The assets to be loaded.
-        :return: None
-        """
-
     def custom_draw(self, window: pygame.surface) -> None:
         """
-        Draw the enviroment sprite to the given window.
+        Draw the environment sprite to the given window.
         :param window: The surface to draw the sprite on.
         :return: None
         """
-
+        pass

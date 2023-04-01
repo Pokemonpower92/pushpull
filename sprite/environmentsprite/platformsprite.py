@@ -12,7 +12,7 @@ class PlatformSprite(EnvironmentSprite):
     They have full blocking collision.
     """
 
-    def __init__(self, position: Tuple, dimensions: Tuple):
+    def __init__(self, position: Tuple, dimensions: Tuple, image: pygame.Surface):
         """
         Get s PlatformSprite
         :param dimensions: The dimensions of the platform sprite.
@@ -22,15 +22,7 @@ class PlatformSprite(EnvironmentSprite):
 
         self._dimensions = dimensions
         self._position = position
-        self._hit_box = None
+        self.image = image
 
-        self.rect = None
-        self.image = None
-
-        self._load_assets({})
-
-    def _load_assets(self, assets: Dict[str, Any]):
-        self.image = pygame.Surface(self._dimensions)
-        self.image.fill(colors.RED)
         self.rect = self.image.get_rect(topleft=self._position)
         self._hit_box = self.rect.inflate(.1, .1)

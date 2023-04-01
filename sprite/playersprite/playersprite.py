@@ -26,8 +26,8 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.velocity = pygame.math.Vector2(0, 0)
         self.weight = 100
 
-        self._dimensions = (20, 40)
-        self._position = (100, 710)
+        self._dimensions = (32, 32)
+        self._position = (0, 576)
         self._hit_box = None
 
         self.rect = None
@@ -113,7 +113,6 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
 
         try:
-
             self._check_vertical_collisions()
             self._check_horizontal_collisions()
 
@@ -147,6 +146,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         Take whatever actions are on the actions queue.
         :return: None
         """
+
         try:
             self.delta_velocity = pygame.math.Vector2(0, 0)
 
@@ -184,7 +184,6 @@ class PlayerSprite(pygame.sprite.Sprite):
         Update the player sprite.
         :return: None
         """
-
         try:
             self._get_input()
             self._take_action()
