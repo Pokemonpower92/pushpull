@@ -13,16 +13,16 @@ class PhysicsEngine:
         self._logger = PushPullLogger("physicsengine")
         self._gravity = 2
         self._x_decay = 1
-        self._terminal_velocity = Vector2(20, 15)
+        self._terminal_velocity = Vector2(5, 10)
 
     def calculate_velocity_for_frame(self, **kwargs) -> Vector2:
         """
         Calculate the new velocity for the object in a given frame.
         :return: The calculated velocity.
         """
-        original_velocity = kwargs.get("velocity")  # 0, 0
-        delta_velocity = kwargs.get("delta_velocity")  # 2, 0
-        direction = kwargs.get("direction")  # 1, 0
+        original_velocity = kwargs.get("velocity")
+        delta_velocity = kwargs.get("delta_velocity")
+        direction = kwargs.get("direction")
 
         original_velocity.x += (delta_velocity.x * direction.x)
         original_velocity.y += (delta_velocity.y * direction.y)
@@ -56,4 +56,3 @@ class PhysicsEngine:
             velocity.x = min(self._terminal_velocity.x, velocity.x)
 
         return velocity
-
