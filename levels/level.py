@@ -34,7 +34,7 @@ class Level:
         return tilemap
 
     @abstractmethod
-    def load_tiles(self) -> None:
+    def load_sprites(self) -> None:
         """
         Load all the tiles for the level and store them in self._tiles.
         :return:

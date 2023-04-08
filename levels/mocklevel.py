@@ -12,11 +12,11 @@ from sprite.environmentsprite.platformsprite import PlatformSprite
 from sprite.spritesheet import SpriteSheet
 
 
-class TestLevel(Level):
+class MockLevel(Level):
 
     def __init__(self) -> None:
         super().__init__()
-        self._logger = PushPullLogger("test_level")
+        self._logger = PushPullLogger("testing_level")
         self._level_data = TEST_LEVEL_DATA
 
     def load_sprites(self) -> Dict[TileTypes, pygame.sprite.Sprite]:
