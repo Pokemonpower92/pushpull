@@ -17,24 +17,21 @@ class PlayerSprite(pygame.sprite.Sprite):
 
     def __init__(self, obstructions: pygame.sprite.Group):
         pygame.sprite.Sprite.__init__(self)
-        self._obstructions = obstructions
-
-        self._actions = [PlayerAction.IDLE]
-
-        # Physics fields.
-        self.direction = pygame.math.Vector2(0, 0)
-        self.velocity = pygame.math.Vector2(0, 0)
-        self.weight = 100
-
-        self._dimensions = (32, 32)
-        self._position = (0, 576)
-        self._hit_box = None
 
         self.rect = None
         self.image = None
+        self.direction = pygame.math.Vector2(0, 0)
+        self.velocity = pygame.math.Vector2(0, 0)
 
-        self._logger = PushPullLogger("playersprite")
+        self._jump_count = playerconfig.NUM_JUMPS
+        self._weight = 100
         self._physics_engine = PhysicsEngine()
+        self._logger = PushPullLogger("playersprite")
+        self._dimensions = (32, 32)
+        self._position = (0, 576)
+        self._hit_box = None
+        self._obstructions = obstructions
+        self._actions = [PlayerAction.IDLE]
 
         self._load_assets({})
 
@@ -71,6 +68,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.velocity.y = 0
         self.rect.bottom = rect.top
         self._hit_box.bottom = rect.top
+        self._jump_count = playerconfig.NUM_JUMPS
 
     def _check_vertical_collisions(self) -> None:
         """
@@ -158,9 +156,10 @@ class PlayerSprite(pygame.sprite.Sprite):
                 if action == PlayerAction.MOVING_RIGHT:
                     self.direction.x = 1
                     self.delta_velocity += playerconfig.WALKING_VELOCITY
-                if action == PlayerAction.JUMP:
+                if action == PlayerAction.JUMP and self._jump_count > 0:
                     self.direction.y = -1
                     self.delta_velocity += playerconfig.JUMPING_VELOCITY
+                    self._jump_count -= 1
                 if action == PlayerAction.IDLE:
                     self.direction.y = 0
 

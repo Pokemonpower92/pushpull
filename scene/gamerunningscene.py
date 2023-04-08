@@ -1,12 +1,9 @@
 import pygame
 
-from levels.testlevel import TestLevel
-from pushpullconfig import resourcepaths
+from levels.mocklevel import MockLevel
 from pushpulltypes.tiletypes import TileTypes
 from scene.scene import Scene
-from sprite.environmentsprite.platformsprite import PlatformSprite
 from sprite.playersprite.playersprite import PlayerSprite
-from sprite.spritesheet import SpriteSheet
 
 
 class GameRunningScene(Scene):
@@ -17,7 +14,7 @@ class GameRunningScene(Scene):
     def __init__(self):
         super().__init__()
         self._platform_sprites = pygame.sprite.Group()
-        self._level = TestLevel()
+        self._level = MockLevel()
         self._load_resources()
 
     def _load_resources(self) -> None:
