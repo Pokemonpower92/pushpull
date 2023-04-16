@@ -3,16 +3,18 @@ from typing import Dict, Any
 
 import pygame
 
+from cooldown.cooldowns import Cooldowns
 from logger.pushpulllogger import PushPullLogger
 from physics.physicsengine import PhysicsEngine
 from pushpullconfig import colors
 from pushpullconfig import playerconfig
 from pushpulltypes.playeraction import PlayerAction
+from pushpullconstants.playerconstants import JUMP_COOLDOWN
 
 
 class PlayerSprite(pygame.sprite.Sprite):
     """
-    Player sprite is teh sprite for the player. Duh
+    Player sprite is the sprite for the player. Duh
     """
 
     def __init__(self, obstructions: pygame.sprite.Group):
@@ -32,6 +34,10 @@ class PlayerSprite(pygame.sprite.Sprite):
         self._hit_box = None
         self._obstructions = obstructions
         self._actions = [PlayerAction.IDLE]
+        self._cooldowns = Cooldowns(playerconfig.COOLDOWNS)
+
+        self._health = playerconfig.BASE_HEALTH
+        self._armor = playerconfig.BASE_ARMOR
 
         self._load_assets({})
 
@@ -70,6 +76,22 @@ class PlayerSprite(pygame.sprite.Sprite):
         self._hit_box.bottom = rect.top
         self._jump_count = playerconfig.NUM_JUMPS
 
+    def _check_for_death(self):
+        if self._health <= 0:
+            self.kill()
+
+    def _calculate_damage(self, obj: pygame.sprite.Sprite) -> None:
+        """
+        Calculate damage to the player considering the given object.
+        :param obj: The obj to calculate the damage to
+        :return: None
+        """
+
+        if self.rect.y > 1000:
+            self._health = 0
+
+        self._check_for_death()
+
     def _check_vertical_collisions(self) -> None:
         """
         Check for any collisions on the y_axis.
@@ -79,6 +101,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.rect.y += self.velocity.y
         for obj in self._obstructions:
             if obj.rect.colliderect(self.rect):
+                self._calculate_damage(obj)
                 # Check whether the player was rising or falling.
                 if self.velocity.y < 0:
                     self._falling(obj.rect)
@@ -94,6 +117,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.rect.x += self.velocity.x
         for obj in self._obstructions:
             if obj.rect.colliderect(self.rect):
+                self._calculate_damage(obj)
                 # Check whether the player was rising or falling.
                 if self.velocity.x < 0:
                     self.rect.left = obj.rect.right
@@ -124,8 +148,9 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
         pressed_keys = pygame.key.get_pressed()
 
-        if pressed_keys[pygame.K_SPACE]:
+        if pressed_keys[pygame.K_SPACE] and self._cooldowns.check_cooldown(JUMP_COOLDOWN):
             self._actions.append(PlayerAction.JUMP)
+            self._cooldowns.reset_cooldown(JUMP_COOLDOWN)
         if pressed_keys[pygame.K_LSHIFT]:
             self._sprinting = True
 
@@ -187,6 +212,9 @@ class PlayerSprite(pygame.sprite.Sprite):
             self._get_input()
             self._take_action()
             self._update_image()
+
+            # TODO this is only for testing.
+            self._calculate_damage(None)
 
         except Exception as e:
             self._logger.error(f"Exception updating player sprite. ERROR: {e}", 2)

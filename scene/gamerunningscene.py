@@ -27,5 +27,5 @@ class GameRunningScene(Scene):
         self._platform_sprites.add(sprites[TileTypes.PLATFORM])
         self._all_sprites.add(sprites[TileTypes.PLATFORM])
 
-        player = PlayerSprite(self._platform_sprites)
-        self._all_sprites.add(player)
+        self.player = PlayerSprite(self._platform_sprites)
+        self._all_sprites.add(self.player)

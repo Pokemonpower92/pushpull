@@ -13,7 +13,7 @@ class PhysicsEngine:
         self._logger = PushPullLogger("physicsengine")
         self._gravity = 3
         self._x_decay = 1
-        self._terminal_velocity = Vector2(5, 30)
+        self._terminal_velocity = Vector2(5, 5)
 
     def calculate_velocity_for_frame(self, **kwargs) -> Vector2:
         """
@@ -25,7 +25,7 @@ class PhysicsEngine:
         direction = kwargs.get("direction")
 
         original_velocity.x = (delta_velocity.x * direction.x)
-        original_velocity.y = (delta_velocity.y * direction.y)
+        original_velocity.y += (delta_velocity.y * direction.y)
 
         # Psudeo acceleration.
         original_velocity.y += self._gravity
