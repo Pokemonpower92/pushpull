@@ -1,3 +1,5 @@
+import sys
+
 from gamestate.window import Window
 from gamestate.eventhandler import EventHandler
 from logger.pushpulllogger import PushPullLogger
@@ -27,6 +29,9 @@ class Scene:
             self._window.fill(colors.DARKGREY)
             for sprite in self._all_sprites:
                 sprite.update()
+
+            if not self.player.alive():
+                sys.exit()
 
         except Exception as e:
             self._logger.error(f"Failed to update scene. Error: {e}", 2)
