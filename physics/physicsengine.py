@@ -11,9 +11,9 @@ class PhysicsEngine:
 
     def __init__(self):
         self._logger = PushPullLogger("physicsengine")
-        self._gravity = 3
+        self._gravity = 2
         self._x_decay = 1
-        self._terminal_velocity = Vector2(5, 5)
+        self._terminal_velocity = Vector2(5, 20)
 
     def calculate_velocity_for_frame(self, **kwargs) -> Vector2:
         """

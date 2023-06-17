@@ -26,6 +26,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.velocity = pygame.math.Vector2(0, 0)
 
         self._jump_count = playerconfig.NUM_JUMPS
+        self._jump_debounce = False
         self._weight = 100
         self._physics_engine = PhysicsEngine()
         self._logger = PushPullLogger("playersprite")
@@ -151,6 +152,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         if pressed_keys[pygame.K_SPACE] and self._cooldowns.check_cooldown(JUMP_COOLDOWN):
             self._actions.append(PlayerAction.JUMP)
             self._cooldowns.reset_cooldown(JUMP_COOLDOWN)
+
         if pressed_keys[pygame.K_LSHIFT]:
             self._sprinting = True
 
@@ -184,6 +186,7 @@ class PlayerSprite(pygame.sprite.Sprite):
                 if action == PlayerAction.JUMP and self._jump_count > 0:
                     self.direction.y = -1
                     self.delta_velocity += playerconfig.JUMPING_VELOCITY
+                    self.delta_velocity.x = self.direction.x * 1.5
                     self._jump_count -= 1
                 if action == PlayerAction.IDLE:
                     self.direction.y = 0
