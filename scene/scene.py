@@ -1,9 +1,5 @@
-import sys
-
 from gamestate.window import Window
-from gamestate.eventhandler import EventHandler
 from logger.pushpulllogger import PushPullLogger
-from pushpullconfig import colors
 import pygame
 
 from pushpullconfig.gameconfig import FPS
@@ -25,16 +21,7 @@ class Scene:
         Update all the sprites in the scene.
         :return: None
         """
-        try:
-            self._window.fill(colors.DARKGREY)
-            for sprite in self._all_sprites:
-                sprite.update()
-
-            if not self.player.alive():
-                sys.exit()
-
-        except Exception as e:
-            self._logger.error(f"Failed to update scene. Error: {e}", 2)
+        pass
 
     def _load_resources(self) -> None:
         """
@@ -64,10 +51,10 @@ class Scene:
             self._running = True
             while self._running:
                 self._clock.tick(FPS)
-                EventHandler.check_for_exit_event()
                 self._update()
                 self._draw_sprites()
                 pygame.display.update()
+                pygame.event.pump()
 
         except Exception as e:
             self._logger.error(f"Encountered error while running the scene. Error: {e}", 2)
