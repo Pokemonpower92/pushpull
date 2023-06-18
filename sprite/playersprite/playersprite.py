@@ -8,6 +8,7 @@ from logger.pushpulllogger import PushPullLogger
 from physics.physicsengine import PhysicsEngine
 from pushpullconfig import colors
 from pushpullconfig import playerconfig
+from pushpullconstants.eventconstants import EventConstants
 from pushpulltypes.playeraction import PlayerAction
 from pushpullconstants.playerconstants import JUMP_COOLDOWN
 
@@ -26,7 +27,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.velocity = pygame.math.Vector2(0, 0)
 
         self._jump_count = playerconfig.NUM_JUMPS
-        self._jump_debounce = False
+        self._can_jump = True
         self._weight = 100
         self._physics_engine = PhysicsEngine()
         self._logger = PushPullLogger("playersprite")
@@ -93,7 +94,7 @@ class PlayerSprite(pygame.sprite.Sprite):
 
         self._check_for_death()
 
-    def _check_vertical_collisions(self) -> None:
+    def _handle_vertical_collisions(self) -> None:
         """
         Check for any collisions on the y_axis.
         :return: None
@@ -109,7 +110,7 @@ class PlayerSprite(pygame.sprite.Sprite):
                 else:
                     self._landing(obj.rect)
 
-    def _check_horizontal_collisions(self) -> None:
+    def _handle_horizontal_collisions(self) -> None:
         """
         Check for any collisions on the x_axis.
         :return: None
@@ -136,22 +137,33 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
 
         try:
-            self._check_vertical_collisions()
-            self._check_horizontal_collisions()
+            self._handle_vertical_collisions()
+            self._handle_horizontal_collisions()
 
         except Exception as e:
             self._logger.error(f"Error moving player. {e}", 2)
 
-    def _get_input(self) -> None:
+    def _handle_events(self, player_events) -> None:
         """
-        Get input from the player and add it to the actions queue.
+        Handle the events passed in, and handle player movement.
         :return: None
         """
-        pressed_keys = pygame.key.get_pressed()
 
-        if pressed_keys[pygame.K_SPACE] and self._cooldowns.check_cooldown(JUMP_COOLDOWN):
+        # These events should only be triggered once per button press
+        # and as such are passed in from a master event handler for
+        # keyup and keydown events.
+        if EventConstants.JUMP_BUTTON_PRESSED in player_events and self._can_jump and self._cooldowns.check_cooldown(
+                JUMP_COOLDOWN):
             self._actions.append(PlayerAction.JUMP)
             self._cooldowns.reset_cooldown(JUMP_COOLDOWN)
+            self._can_jump = False
+
+        if EventConstants.JUMP_BUTTON_RELEASED:
+            self._can_jump = True
+
+        # Some keybindings, such as player movement
+        # should be able to be held.
+        pressed_keys = pygame.key.get_pressed()
 
         if pressed_keys[pygame.K_LSHIFT]:
             self._sprinting = True
@@ -163,8 +175,6 @@ class PlayerSprite(pygame.sprite.Sprite):
 
         if len(self._actions) == 0:
             self._actions.append(PlayerAction.IDLE)
-
-        pygame.event.pump()
 
     def _take_action(self) -> None:
         """
@@ -206,13 +216,13 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
         pass
 
-    def update(self) -> None:
+    def update(self, player_events) -> None:
         """
         Update the player sprite.
         :return: None
         """
         try:
-            self._get_input()
+            self._handle_events(player_events)
             self._take_action()
             self._update_image()
 
